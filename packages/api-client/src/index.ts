@@ -26,6 +26,10 @@ export class ApiClient {
     }
   }
 
+  setBaseUrl(url: string) {
+    this.baseUrl = url.endsWith('/api/v1') ? url : `${url.replace(/\/$/, '')}/api/v1`;
+  }
+
   setToken(token: string | null) {
     this.token = token;
     if (typeof window !== 'undefined') {
