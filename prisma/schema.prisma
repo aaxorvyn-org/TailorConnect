@@ -1,0 +1,612 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  CUSTOMER
+  BUSINESS
+  ADMIN
+}
+
+enum BusinessType {
+  INDIVIDUAL_TAILOR
+  BOUTIQUE
+}
+
+enum BusinessVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  MATCHING
+  QUOTED
+  ACCEPTED
+  CANCELLED
+  EXPIRED
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum OrderStatus {
+  REQUESTED
+  QUOTE_SENT
+  ACCEPTED
+  APPOINTMENT_BOOKED
+  MEASUREMENT
+  CUTTING
+  STITCHING
+  FITTING
+  ALTERATION
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum AppointmentType {
+  CONSULTATION
+  MEASUREMENT
+  FITTING
+  PICKUP
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentMethod {
+  ONLINE_CARD
+  ONLINE_UPI
+  ONLINE_NETBANKING
+  OFFLINE_CASH
+  OFFLINE_UPI_QR
+  PAY_AT_SHOP
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  SMS
+  EMAIL
+}
+
+// ----------------------------------------------------
+// 1. IDENTITY & PROFILE
+// ----------------------------------------------------
+
+model User {
+  id               String       @id @default(uuid()) @db.Uuid
+  email            String?      @unique @db.VarChar(255)
+  phone            String?      @unique @db.VarChar(32)
+  passwordHash     String       @db.VarChar(255)
+  role             UserRole     @default(CUSTOMER)
+  isActive         Boolean      @default(true)
+  isEmailVerified  Boolean      @default(false)
+  isPhoneVerified  Boolean      @default(false)
+  createdAt        DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime     @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  profile          Profile?
+  memberships      BusinessMember[]
+  requests         CustomerRequest[]
+  orders           Order[]
+  appointments     Appointment[]
+  reviews          Review[]
+  notifications    Notification[]
+  preferences      NotificationPreference?
+  adminActions     AdminAction[]
+
+  @@index([role])
+  @@index([phone])
+  @@index([email])
+}
+
+model Profile {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @unique @db.Uuid
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName      String    @db.VarChar(100)
+  lastName       String?   @db.VarChar(100)
+  avatarUrl      String?   @db.VarChar(512)
+  city           String?   @db.VarChar(100)
+  state          String?   @db.VarChar(100)
+  postalCode     String?   @db.VarChar(20)
+  approxLocation String?   @db.VarChar(255)
+  latitude       Float?
+  longitude      Float?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([city])
+}
+
+// ----------------------------------------------------
+// 2. BUSINESS & CAPABILITY
+// ----------------------------------------------------
+
+model Business {
+  id                    String                     @id @default(uuid()) @db.Uuid
+  name                  String                     @db.VarChar(255)
+  slug                  String                     @unique @db.VarChar(255)
+  businessType          BusinessType               @default(INDIVIDUAL_TAILOR)
+  verificationStatus    BusinessVerificationStatus @default(PENDING)
+  description           String?                    @db.Text
+  coverImageUrl         String?                    @db.VarChar(512)
+  logoUrl               String?                    @db.VarChar(512)
+  phone                 String                     @db.VarChar(32)
+  email                 String?                    @db.VarChar(255)
+  typicalTurnaroundDays Int                        @default(7)
+  startingPrice         Decimal                    @default(0.00) @db.Decimal(10, 2)
+  serviceRadiusKm       Float                      @default(15.0)
+  offersHomePickup      Boolean                    @default(false)
+  offersHomeDelivery    Boolean                    @default(false)
+  offersHomeMeasurement Boolean                    @default(false)
+  requiresAppointment   Boolean                    @default(false)
+  ratingAverage         Decimal                    @default(0.00) @db.Decimal(3, 2)
+  totalReviewsCount     Int                        @default(0)
+  completedOrdersCount  Int                        @default(0)
+  workingHours          Json?
+  languagesSpoken       String[]                   @default(["English", "Hindi"])
+  isAcceptingOrders     Boolean                    @default(true)
+  createdAt             DateTime                   @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime                   @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  members               BusinessMember[]
+  location              BusinessLocation?
+  services              BusinessService[]
+  specializations       BusinessSpecialization[]
+  portfolioItems        BusinessPortfolio[]
+  quotes                Quote[]
+  orders                Order[]
+  appointments          Appointment[]
+  reviews               Review[]
+
+  @@index([verificationStatus])
+  @@index([businessType])
+  @@index([ratingAverage])
+  @@index([startingPrice])
+}
+
+model BusinessMember {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId     String   @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       String   @default("OWNER") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([businessId, userId])
+}
+
+model BusinessLocation {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessId     String   @unique @db.Uuid
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  addressLine1   String   @db.VarChar(255)
+  addressLine2   String?  @db.VarChar(255)
+  landmark       String?  @db.VarChar(255)
+  locality       String   @db.VarChar(150)
+  city           String   @db.VarChar(100)
+  state          String   @db.VarChar(100)
+  postalCode     String   @db.VarChar(20)
+  latitude       Float
+  longitude      Float
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([city, locality])
+  @@index([latitude, longitude])
+}
+
+model BusinessService {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessId     String   @db.Uuid
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  serviceId      String   @db.Uuid
+  service        Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  basePrice      Decimal  @db.Decimal(10, 2)
+  estimatedDays  Int      @default(5)
+  isAvailable    Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([businessId, serviceId])
+  @@index([serviceId])
+}
+
+model BusinessSpecialization {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String   @db.Uuid
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tag         String   @db.VarChar(100)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([businessId, tag])
+  @@index([tag])
+}
+
+model BusinessPortfolio {
+  id           String   @id @default(uuid()) @db.Uuid
+  businessId   String   @db.Uuid
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  imageUrl     String   @db.VarChar(512)
+  thumbnailUrl String?  @db.VarChar(512)
+  title        String   @db.VarChar(255)
+  category     String   @db.VarChar(100)
+  garmentType  String   @db.VarChar(100)
+  description  String?  @db.Text
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([businessId, category])
+}
+
+// ----------------------------------------------------
+// 3. TAXONOMY & CATALOG
+// ----------------------------------------------------
+
+model ServiceCategory {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @unique @db.VarChar(100)
+  slug         String    @unique @db.VarChar(100)
+  description  String?   @db.VarChar(255)
+  iconName     String?   @db.VarChar(100)
+  displayOrder Int       @default(0)
+  isActive     Boolean   @default(true)
+  services     Service[]
+
+  @@index([isActive, displayOrder])
+}
+
+model Service {
+  id                     String            @id @default(uuid()) @db.Uuid
+  categoryId             String            @db.Uuid
+  category               ServiceCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name                   String            @db.VarChar(150)
+  slug                   String            @unique @db.VarChar(150)
+  gender                 String            @default("WOMEN") @db.VarChar(20)
+  description            String?           @db.Text
+  benchmarkStartingPrice Decimal           @default(500.00) @db.Decimal(10, 2)
+  typicalTurnaroundDays  Int               @default(5)
+  isActive               Boolean           @default(true)
+
+  businessServices       BusinessService[]
+  customerRequests       CustomerRequest[]
+
+  @@index([categoryId, isActive])
+  @@index([slug])
+}
+
+// ----------------------------------------------------
+// 4. REQUESTS & MESSAGING
+// ----------------------------------------------------
+
+model CustomerRequest {
+  id                       String         @id @default(uuid()) @db.Uuid
+  requestNumber            String         @unique @db.VarChar(32)
+  customerId               String         @db.Uuid
+  customer                 User           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId                String?        @db.Uuid
+  service                  Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  garmentType              String         @db.VarChar(100)
+  categoryName             String         @db.VarChar(100)
+  rawPrompt                String         @db.Text
+  structuredRequirements   Json?
+  fabricProvidedByCustomer Boolean        @default(true)
+  requiredDate             DateTime       @db.Date
+  budgetMin                Decimal?       @db.Decimal(10, 2)
+  budgetMax                Decimal?       @db.Decimal(10, 2)
+  pickupRequired           Boolean        @default(false)
+  deliveryRequired         Boolean        @default(false)
+  locationLocality         String         @db.VarChar(150)
+  locationCity             String         @db.VarChar(100)
+  latitude                 Float?
+  longitude                Float?
+  status                   RequestStatus  @default(SUBMITTED)
+  createdAt                DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime       @updatedAt @db.Timestamptz(6)
+
+  images                   RequestImage[]
+  messages                 RequestMessage[]
+  quotes                   Quote[]
+  order                    Order?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([requiredDate])
+  @@index([locationCity, locationLocality])
+}
+
+model RequestImage {
+  id         String          @id @default(uuid()) @db.Uuid
+  requestId  String          @db.Uuid
+  request    CustomerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  imageUrl   String          @db.VarChar(512)
+  caption    String?         @db.VarChar(255)
+  createdAt  DateTime        @default(now()) @db.Timestamptz(6)
+
+  @@index([requestId])
+}
+
+model RequestMessage {
+  id         String          @id @default(uuid()) @db.Uuid
+  requestId  String          @db.Uuid
+  request    CustomerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  senderId   String          @db.Uuid
+  senderRole UserRole
+  content    String          @db.Text
+  isInternal Boolean         @default(false)
+  createdAt  DateTime        @default(now()) @db.Timestamptz(6)
+
+  @@index([requestId, createdAt])
+}
+
+// ----------------------------------------------------
+// 5. QUOTES
+// ----------------------------------------------------
+
+model Quote {
+  id                 String          @id @default(uuid()) @db.Uuid
+  quoteNumber        String          @unique @db.VarChar(32)
+  requestId          String          @db.Uuid
+  request            CustomerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  businessId         String          @db.Uuid
+  business           Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  status             QuoteStatus     @default(SENT)
+  totalAmount        Decimal         @db.Decimal(10, 2)
+  advanceAmount      Decimal         @default(0.00) @db.Decimal(10, 2)
+  estimatedReadyDate DateTime        @db.Date
+  fittingsIncluded   Int             @default(1)
+  notes              String?         @db.Text
+  validUntil         DateTime        @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(6)
+
+  items              QuoteItem[]
+  order              Order?
+
+  @@index([requestId])
+  @@index([businessId, status])
+}
+
+model QuoteItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  quoteId     String   @db.Uuid
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  title       String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  amount      Decimal  @db.Decimal(10, 2)
+
+  @@index([quoteId])
+}
+
+// ----------------------------------------------------
+// 6. ORDERS & TIMELINE
+// ----------------------------------------------------
+
+model Order {
+  id                   String               @id @default(uuid()) @db.Uuid
+  orderNumber          String               @unique @db.VarChar(32)
+  customerId           String               @db.Uuid
+  customer             User                 @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  businessId           String               @db.Uuid
+  business             Business             @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  requestId            String?              @unique @db.Uuid
+  request              CustomerRequest?     @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  quoteId              String               @unique @db.Uuid
+  quote                Quote                @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  garmentName          String               @db.VarChar(255)
+  status               OrderStatus          @default(ACCEPTED)
+  totalAmount          Decimal              @db.Decimal(10, 2)
+  paidAmount           Decimal              @default(0.00) @db.Decimal(10, 2)
+  paymentStatus        PaymentStatus        @default(PENDING)
+  estimatedCompletion DateTime             @db.Date
+  deliveryOption       String               @default("PICKUP") @db.VarChar(50)
+  customerNotes        String?              @db.Text
+  measurementProfileId String?              @db.Uuid
+  designCardId         String?              @db.Uuid
+  createdAt            DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime             @updatedAt @db.Timestamptz(6)
+
+  statusHistory        OrderStatusHistory[]
+  notes                OrderNote[]
+  appointments         Appointment[]
+  payments             Payment[]
+  review               Review?
+
+  @@index([customerId, status])
+  @@index([businessId, status])
+  @@index([estimatedCompletion])
+  @@index([createdAt])
+}
+
+model OrderStatusHistory {
+  id          String       @id @default(uuid()) @db.Uuid
+  orderId     String       @db.Uuid
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  changedById String       @db.Uuid
+  note        String?      @db.VarChar(500)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+
+  @@index([orderId, createdAt])
+}
+
+model OrderNote {
+  id                String   @id @default(uuid()) @db.Uuid
+  orderId           String   @db.Uuid
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  authorId          String   @db.Uuid
+  content           String   @db.Text
+  isCustomerVisible Boolean  @default(true)
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([orderId])
+}
+
+// ----------------------------------------------------
+// 7. APPOINTMENTS
+// ----------------------------------------------------
+
+model Appointment {
+  id                String            @id @default(uuid()) @db.Uuid
+  appointmentNumber String            @unique @db.VarChar(32)
+  customerId        String            @db.Uuid
+  customer          User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  businessId        String            @db.Uuid
+  business          Business          @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  orderId           String?           @db.Uuid
+  order             Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  type              AppointmentType   @default(MEASUREMENT)
+  status            AppointmentStatus @default(REQUESTED)
+  date              DateTime          @db.Date
+  startTime         String            @db.VarChar(10)
+  endTime           String            @db.VarChar(10)
+  notes             String?           @db.Text
+  createdAt         DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime          @updatedAt @db.Timestamptz(6)
+
+  @@index([businessId, date])
+  @@index([customerId, date])
+  @@index([status])
+}
+
+// ----------------------------------------------------
+// 8. PAYMENTS
+// ----------------------------------------------------
+
+model Payment {
+  id            String               @id @default(uuid()) @db.Uuid
+  paymentNumber String               @unique @db.VarChar(32)
+  orderId       String               @db.Uuid
+  order         Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  amount        Decimal              @db.Decimal(10, 2)
+  method        PaymentMethod        @default(OFFLINE_CASH)
+  status        PaymentStatus        @default(PENDING)
+  notes         String?              @db.VarChar(255)
+  paidAt        DateTime?            @db.Timestamptz(6)
+  createdAt     DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime             @updatedAt @db.Timestamptz(6)
+
+  transactions  PaymentTransaction[]
+
+  @@index([orderId, status])
+}
+
+model PaymentTransaction {
+  id              String        @id @default(uuid()) @db.Uuid
+  paymentId       String        @db.Uuid
+  payment         Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  transactionRef  String        @unique @db.VarChar(128)
+  amount          Decimal       @db.Decimal(10, 2)
+  gatewayName     String        @default("MOCK_ADAPTER") @db.VarChar(50)
+  status          PaymentStatus
+  gatewayResponse Json?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+
+  @@index([paymentId])
+  @@index([transactionRef])
+}
+
+// ----------------------------------------------------
+// 9. REVIEWS & RATINGS
+// ----------------------------------------------------
+
+model Review {
+  id              String   @id @default(uuid()) @db.Uuid
+  orderId         String   @unique @db.Uuid
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  customerId      String   @db.Uuid
+  customer        User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  businessId      String   @db.Uuid
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  rating          Int      @db.SmallInt
+  serviceType     String   @db.VarChar(100)
+  comment         String?  @db.Text
+  fitRating       Int?     @db.SmallInt
+  finishingRating Int?     @db.SmallInt
+  isModerated     Boolean  @default(false)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([businessId, rating])
+  @@index([customerId])
+}
+
+// ----------------------------------------------------
+// 10. NOTIFICATIONS & AUDIT
+// ----------------------------------------------------
+
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String              @db.VarChar(255)
+  body      String              @db.Text
+  linkUrl   String?             @db.VarChar(512)
+  channel   NotificationChannel @default(IN_APP)
+  isRead    Boolean             @default(false)
+  readAt    DateTime?           @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @db.Timestamptz(6)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model NotificationPreference {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inAppAlerts Boolean  @default(true)
+  pushAlerts  Boolean  @default(true)
+  smsAlerts   Boolean  @default(false)
+  emailAlerts Boolean  @default(true)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model AdminAction {
+  id           String   @id @default(uuid()) @db.Uuid
+  adminUserId  String   @db.Uuid
+  adminUser    User     @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+  actionType   String   @db.VarChar(100)
+  targetEntity String   @db.VarChar(100)
+  targetId     String   @db.VarChar(64)
+  reason       String?  @db.Text
+  ipAddress    String?  @db.VarChar(45)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([adminUserId, createdAt])
+  @@index([targetEntity, targetId])
+}

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment variables & secrets (CRITICAL: Never commit .env)
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+*.env
+
+# Build outputs & caches
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+tsconfig.*.tsbuildinfo
+
+# Uploads & local storage
+uploads/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Binaries & executables
+cloudflared.exe
+*.exe
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Prisma generated engines (if any)
+prisma/*.db
+prisma/*.db-journal
