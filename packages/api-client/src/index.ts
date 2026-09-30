@@ -15,11 +15,18 @@ import type {
   StructuredGarmentRequirement,
 } from '@tailorconnect/types';
 
+const defaultBaseUrl =
+  typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  !window.location.hostname.includes('127.0.0.1')
+    ? 'https://tailorconnect-api.onrender.com/api/v1'
+    : '/api/v1';
+
 export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
 
-  constructor(baseUrl = '/api/v1') {
+  constructor(baseUrl = defaultBaseUrl) {
     this.baseUrl = baseUrl;
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('tc_token');
@@ -88,6 +95,11 @@ export class ApiClient {
     register: (data: any) => this.request<AuthTokens>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
     login: (data: any) => this.request<AuthTokens>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
     me: () => this.request<UserDto>('/auth/me'),
+    clerkSync: (data: { clerkId: string; email: string; firstName?: string; lastName?: string; phone?: string; role?: string }) =>
+      this.request<{ user: UserDto; accessToken: string; isNewUser: boolean }>('/auth/clerk-sync', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     logout: () => {
       this.setToken(null);
       return this.request('/auth/logout', { method: 'POST' });

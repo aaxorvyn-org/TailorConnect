@@ -14,23 +14,18 @@ export function ClerkSyncBridge() {
           const email = clerkUser.primaryEmailAddress?.emailAddress;
           if (!email) return;
 
-          const res = await fetch('/api/v1/auth/clerk-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clerkId: clerkUser.id,
-              email,
-              firstName: clerkUser.firstName || email.split('@')[0],
-              lastName: clerkUser.lastName || '',
-              phone: clerkUser.primaryPhoneNumber?.phoneNumber,
-            }),
+          const res = await api.auth.clerkSync({
+            clerkId: clerkUser.id,
+            email,
+            firstName: clerkUser.firstName || email.split('@')[0],
+            lastName: clerkUser.lastName || '',
+            phone: clerkUser.primaryPhoneNumber?.phoneNumber,
           });
 
-          const data = await res.json();
-          if (data.success && data.data) {
-            api.setToken(data.data.accessToken);
+          if (res.success && res.data) {
+            api.setToken(res.data.accessToken);
             if (setUserFromSession) {
-              setUserFromSession(data.data.user);
+              setUserFromSession(res.data.user);
             }
           }
         } catch (e) {

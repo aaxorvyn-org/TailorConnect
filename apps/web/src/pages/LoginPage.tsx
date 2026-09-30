@@ -67,12 +67,12 @@ export function LoginPage() {
           </p>
         </div>
 
-        {/* 1-Click Demo Login Panel (Development Only) */}
-        {import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_BAR !== 'false' && (
+        {/* Instant Demo Accounts (1-Click Login) */}
+        {import.meta.env.VITE_ENABLE_DEMO_BAR !== 'false' && (
           <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-2.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Instant Demo Accounts (1-Click Login)</span>
+              <span>Instant Test Accounts (1-Click Sign In)</span>
             </div>
 
           <div className="grid grid-cols-1 gap-2 text-xs">
@@ -88,7 +88,7 @@ export function LoginPage() {
                   <p className="text-[11px] text-stone-500">Active bridal blouse order with timeline</p>
                 </div>
               </div>
-              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Login</span>
+              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Sign In</span>
             </button>
 
             <button
@@ -103,7 +103,7 @@ export function LoginPage() {
                   <p className="text-[11px] text-stone-500">Banjara Hills studio, requests & cutting workbench</p>
                 </div>
               </div>
-              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Login</span>
+              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Sign In</span>
             </button>
 
             <button
@@ -118,7 +118,7 @@ export function LoginPage() {
                   <p className="text-[11px] text-stone-500">Verify businesses & inspect all order audits</p>
                 </div>
               </div>
-              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Login</span>
+              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Sign In</span>
             </button>
           </div>
         </div>
@@ -129,7 +129,7 @@ export function LoginPage() {
           <CardContent className="pt-6">
             {isClerkActive && (
               <div className="mb-5">
-                <SignInButton mode="modal">
+                <SignInButton>
                   <Button
                     type="button"
                     variant="outline"
