@@ -129,7 +129,7 @@ export function LoginPage() {
           <CardContent className="pt-6">
             {isClerkActive && (
               <div className="mb-5">
-                <SignInButton>
+                <SignInButton fallbackRedirectUrl={typeof window !== 'undefined' ? window.location.origin : '/'}>
                   <Button
                     type="button"
                     variant="outline"

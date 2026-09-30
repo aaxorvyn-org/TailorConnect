@@ -98,7 +98,7 @@ export function RegisterPage() {
           <CardContent className="pt-6">
             {isClerkActive && (
               <div className="mb-5">
-                <SignUpButton>
+                <SignUpButton fallbackRedirectUrl={typeof window !== 'undefined' ? window.location.origin : '/'}>
                   <Button
                     type="button"
                     variant="outline"
