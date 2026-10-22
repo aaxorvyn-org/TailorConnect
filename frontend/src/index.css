@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000000;
+  color: #f4f4f5;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Glassmorphism helpers - Dark Monochrome */
+.glass-panel {
+  background: rgba(15, 15, 18, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-card {
+  background: rgba(24, 24, 27, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom scrollbars - Dark Monochrome */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* ========================================================
+   LIGHT MODE DESIGN SYSTEM — Pure White & Crisp Grey
+   ======================================================== */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #ffffff;
+  color: #09090b;
+}
+
+/* Background surfaces in Light Mode */
+html.light .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+html.light .bg-slate-950\/95,
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/85,
+html.light .bg-slate-950\/80 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/60 {
+  background-color: rgba(244, 244, 245, 0.95) !important;
+}
+
+html.light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+html.light .bg-slate-900\/95,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/70 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/20 {
+  background-color: rgba(244, 244, 245, 0.85) !important;
+}
+
+html.light .bg-slate-850,
+html.light .bg-slate-800 {
+  background-color: #f4f4f5 !important;
+}
+html.light .bg-slate-800\/90,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60 {
+  background-color: #f4f4f5 !important;
+}
+
+html.light .hover\:bg-slate-850:hover,
+html.light .hover\:bg-slate-800:hover,
+html.light .hover\:bg-slate-800\/80:hover,
+html.light .hover\:bg-slate-750:hover {
+  background-color: #e4e4e7 !important;
+}
+
+html.light .hover\:bg-slate-900\/80:hover,
+html.light .hover\:bg-slate-900\/60:hover,
+html.light .hover\:bg-slate-900:hover {
+  background-color: #f4f4f5 !important;
+}
+
+/* Borders in Light Mode */
+html.light .border-slate-950,
+html.light .border-slate-900,
+html.light .border-slate-850,
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-750 {
+  border-color: #e4e4e7 !important;
+}
+html.light .border-slate-700,
+html.light .border-slate-700\/60,
+html.light .border-slate-700\/80 {
+  border-color: #d4d4d8 !important;
+}
+
+/* Glassmorphism in Light Mode */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .glass-card {
+  background: #ffffff !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Typography in Light Mode */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #09090b !important;
+}
+
+html.light .text-slate-100 {
+  color: #09090b !important;
+}
+html.light .text-slate-200 {
+  color: #18181b !important;
+}
+html.light .text-slate-300 {
+  color: #27272a !important;
+}
+html.light .text-slate-400 {
+  color: #52525b !important;
+}
+html.light .text-slate-500 {
+  color: #71717a !important;
+}
+
+/* Headings and generic white text become jet black in Light Mode */
+html.light .text-white {
+  color: #09090b;
+}
+
+/* Solid button overrides in Light Mode */
+html.light button.bg-white,
+html.light a.bg-white {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Preserve white text on dark buttons in Light Mode */
+html.light button[class*="from-emerald"],
+html.light a[class*="from-emerald"],
+html.light button[class*="from-amber"],
+html.light a[class*="from-amber"],
+html.light button.bg-black,
+html.light a.bg-black,
+html.light button.bg-zinc-900,
+html.light a.bg-zinc-900 {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Header & Sidebar */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: #e4e4e7 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light aside {
+  background-color: #ffffff !important;
+  border-right-color: #e4e4e7 !important;
+}
+
+html.light footer {
+  background-color: #fafafa !important;
+  border-top-color: #e4e4e7 !important;
+  color: #71717a !important;
+}
+html.light footer .bg-slate-900\/40 {
+  background-color: #f4f4f5 !important;
+  border-bottom-color: #e4e4e7 !important;
+}
+
+/* Form inputs & textareas in Light Mode */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+  border-color: #d4d4d8 !important;
+}
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #a1a1aa !important;
+}
+
+/* Light Mode scrollbars */
+html.light ::-webkit-scrollbar-track {
+  background: #f4f4f5;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+
